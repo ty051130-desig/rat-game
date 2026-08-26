@@ -1,0 +1,3 @@
+Rat Escape v9.3 export fix
+MAKE_TENNISPLAYER_GLB.bat is now ASCII-only and does not depend on parsing Japanese text in PowerShell.
+The PowerShell fallback is also ASCII-only.

@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rat Escape - v9.3</title>
+  <link rel="stylesheet" href="./style.css?v=9.3" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.185.1/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="game-root"></div>
+
+  <!-- Title -->
+  <section id="title-screen" class="menu-screen">
+    <div class="title-vignette"></div>
+    <div class="menu-panel title-panel">
+      <div class="eyebrow">CHASE • TURN • CATCH</div>
+      <div class="version-badge">VERSION 9.3 • CLUBROOM TENNIS PLAYER</div>
+      <h1>RAT ESCAPE</h1>
+      <p class="title-copy"></p>
+      <div class="title-actions">
+        <button id="title-start-button" class="primary-button">GAME START</button>
+        <button id="title-howto-button" class="secondary-button">あそびかた</button>
+      </div>
+      <div class="title-rule"><span class="desktop-only-inline">WASD / 矢印キーで移動</span><span class="touch-only-inline">左下のスティックで移動・横向き推奨</span></div>
+    </div>
+  </section>
+
+  <!-- How to play -->
+  <section id="howto-screen" class="menu-screen hidden">
+    <div class="menu-panel howto-panel">
+      <div class="eyebrow">HOW TO PLAY</div>
+      <h2>あそびかた</h2>
+
+      <div class="howto-grid">
+        <article class="howto-card">
+          <div class="howto-icon">01</div>
+          <h3>逃げる</h3>
+          <p><span class="desktop-only-inline">WASD / 矢印キー</span><span class="touch-only-inline">左下のスティック</span>で主人公を動かします。ステージによって主人公も変わります。</p>
+        </article>
+
+        <article class="howto-card danger">
+          <div class="howto-icon">02</div>
+          <h3>正面は危険</h3>
+          <p>ネズミの進行方向側で捕まると <b>GAME OVER</b>。正面から突っ込まないように逃げましょう。</p>
+        </article>
+
+        <article class="howto-card attack">
+          <div class="howto-icon">03</div>
+          <h3>背後を取る</h3>
+          <p>ネズミの後ろへ回り込んで接触すると退治できます。<b>10匹退治</b>でステージクリアです。</p>
+        </article>
+
+        <article class="howto-card warning">
+          <div class="howto-icon">04</div>
+          <h3>土管を見る</h3>
+          <p>ネズミが出る直前は土管が揺れて赤く光ります。予告が見えたら出口から離れましょう。</p>
+        </article>
+      </div>
+
+      <div class="howto-tip">
+        <b>コツ：</b> 障害物を使ってネズミを誘導し、一気に背後へ回り込む。
+      </div>
+
+      <div class="howto-actions">
+        <button id="howto-start-button" class="primary-button">ステージ選択へ</button>
+        <button id="howto-back-button" class="text-button">← タイトルへ戻る</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stage select -->
+  <section id="stage-screen" class="menu-screen hidden">
+    <div class="menu-panel stage-panel">
+      <div class="eyebrow">SELECT STAGE</div>
+      <h2>ステージ選択</h2>
+      <div class="stage-grid">
+        <button id="basement-stage-button" class="stage-card available basement-card">
+          <span class="stage-number">STAGE 1</span>
+          <span class="stage-card-title">地下室</span>
+          <span class="stage-card-desc">難易度：ふつう</span>
+          <span class="stage-card-action">PLAY</span>
+        </button>
+
+        <button id="clubroom-stage-button" class="stage-card available clubroom-card">
+          <span class="stage-number">STAGE 2</span>
+          <span class="stage-card-title">部室</span>
+          <span class="stage-card-desc">難易度：むずかしい</span>
+          <span class="stage-card-action">PLAY</span>
+        </button>
+
+        <div class="stage-card locked">
+          <span class="stage-number">STAGE 3</span>
+          <span class="stage-card-title">???</span>
+          <span class="stage-card-desc">COMING SOON</span>
+        </div>
+      </div>
+      <button id="stage-back-button" class="text-button">← タイトルへ戻る</button>
+    </div>
+  </section>
+
+  <!-- Gameplay HUD -->
+  <div id="hud" class="game-ui hidden">
+    <div class="stage-label">STAGE 1</div>
+    <div class="stage-name">地下室</div>
+    <div id="score">退治 0 / 10</div>
+  </div>
+
+  <div id="help" class="game-ui hidden">
+    <b>WASD / 矢印</b> 移動<br>
+    ネズミの正面 → GAME OVER<br>
+    ネズミの背後 → 退治<br>
+    <b>R</b> リスタート
+  </div>
+
+  <!-- Mobile controls -->
+  <div id="mobile-controls" class="game-ui touch-only hidden" aria-label="スマホ操作">
+    <div id="joystick-zone" aria-label="移動スティック">
+      <div id="joystick-base">
+        <div id="joystick-thumb"></div>
+      </div>
+    </div>
+    <button id="mobile-restart-button" type="button" aria-label="リスタート">↻</button>
+  </div>
+
+  <div id="orientation-hint" class="touch-only">横向きにすると遊びやすいです</div>
+
+  <!-- Result -->
+  <div id="message" class="hidden">
+    <div id="clear-particles" aria-hidden="true">
+      <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+    </div>
+    <div id="message-card">
+      <div id="result-badge"></div>
+      <div id="message-title"></div>
+      <div id="message-sub"></div>
+      <div class="result-buttons">
+        <button id="restart-button" class="primary-button">もう一度</button>
+        <button id="stage-select-button" class="secondary-button">ステージ選択</button>
+        <button id="title-button" class="text-button">タイトルへ</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./js/main.js?v=9.3"></script>
+</body>
+</html>

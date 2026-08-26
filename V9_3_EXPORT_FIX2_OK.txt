@@ -1,0 +1,7 @@
+Rat Escape v9.3 - Export Fix 2
+
+Fix:
+- Removed bpy.ops.object.select_all/select_set from background export.
+- The original tennisplayer.blend does not need to be resaved.
+- Exports the saved Blender scene directly to assets/models/tennisplayer.glb.
+- Idle and Run actions are preserved for glTF export.
