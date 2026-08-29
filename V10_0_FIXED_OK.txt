@@ -1,0 +1,3 @@
+Rat Escape v10.0 FIXED
+- Fixed SkeletonUtils import that prevented main.js from loading.
+- Added START_SINGLE_PLAY.bat so the game is not opened through file://.

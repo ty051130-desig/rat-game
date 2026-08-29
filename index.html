@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rat Escape - v10.0</title>
+  <link rel="stylesheet" href="./style.css?v=10.0" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.185.1/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="game-root"></div>
+
+  <section id="title-screen" class="menu-screen">
+    <div class="title-vignette"></div>
+    <div class="menu-panel title-panel">
+      <div class="eyebrow">CHASE • TURN • CATCH</div>
+      <div class="version-badge">VERSION 10.0 • ONLINE BATTLE PROTOTYPE</div>
+      <h1>RAT ESCAPE</h1>
+      <p class="title-copy">背後を取れば、立場は逆転。</p>
+      <div class="title-actions vertical-actions">
+        <button id="title-start-button" class="primary-button">SINGLE PLAY</button>
+        <button id="title-online-button" class="primary-button accent-red">ONLINE BATTLE</button>
+        <button id="title-howto-button" class="secondary-button">あそびかた</button>
+      </div>
+      <div class="title-rule"><span class="desktop-only-inline">WASD / 矢印キーで移動</span><span class="touch-only-inline">左下のスティックで移動・横向き推奨</span></div>
+    </div>
+  </section>
+
+  <section id="howto-screen" class="menu-screen hidden">
+    <div class="menu-panel howto-panel">
+      <div class="eyebrow">HOW TO PLAY</div>
+      <h2>あそびかた</h2>
+      <div class="howto-grid">
+        <article class="howto-card">
+          <div class="howto-icon">01</div>
+          <h3>シングルプレイ</h3>
+          <p><span class="desktop-only-inline">WASD / 矢印キー</span><span class="touch-only-inline">左下のスティック</span>で主人公を動かし、ネズミの背後から触れて退治します。</p>
+        </article>
+        <article class="howto-card danger">
+          <div class="howto-icon">02</div>
+          <h3>正面は危険</h3>
+          <p>シングルプレイではネズミの進行方向側で捕まると <b>GAME OVER</b> です。</p>
+        </article>
+        <article class="howto-card attack">
+          <div class="howto-icon">03</div>
+          <h3>オンライン対戦</h3>
+          <p>2人で60秒対戦。より多くのネズミを背後から捕まえた方が勝ちです。</p>
+        </article>
+        <article class="howto-card warning">
+          <div class="howto-icon">04</div>
+          <h3>対戦のコツ</h3>
+          <p>正面で触れると少し足止め。障害物で回り込んで、相手より先に背後を取ろう。</p>
+        </article>
+      </div>
+      <div class="howto-actions">
+        <button id="howto-start-button" class="primary-button">ステージ選択へ</button>
+        <button id="howto-back-button" class="text-button">← タイトルへ戻る</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="stage-screen" class="menu-screen hidden">
+    <div class="menu-panel stage-panel">
+      <div class="eyebrow">SELECT STAGE</div>
+      <h2>シングルプレイ</h2>
+      <div class="stage-grid">
+        <button id="basement-stage-button" class="stage-card available basement-card">
+          <span class="stage-number">STAGE 1</span>
+          <span class="stage-card-title">地下室</span>
+          <span class="stage-card-desc">main_character で挑戦。倉庫の障害物を利用して10匹退治しよう。</span>
+          <span class="stage-card-action">PLAY</span>
+        </button>
+
+        <button id="clubroom-stage-button" class="stage-card available clubroom-card">
+          <span class="stage-number">STAGE 2</span>
+          <span class="stage-card-title">部室</span>
+          <span class="stage-card-desc">tennisplayer で挑戦。Idle / Run アニメーションで部室を駆け回れ。</span>
+          <span class="stage-card-action">PLAY</span>
+        </button>
+
+        <div class="stage-card available battle-card passive-card">
+          <span class="stage-number">BATTLE</span>
+          <span class="stage-card-title">オンライン対戦</span>
+          <span class="stage-card-desc">青と赤の2人で60秒勝負。タイトルから ONLINE BATTLE を選択。</span>
+        </div>
+      </div>
+      <button id="stage-back-button" class="text-button">← タイトルへ戻る</button>
+    </div>
+  </section>
+
+  <section id="online-screen" class="menu-screen hidden">
+    <div class="menu-panel online-panel">
+      <div class="eyebrow">ONLINE BATTLE</div>
+      <h2>2人対戦の準備</h2>
+      <p class="online-copy">青プレイヤーと赤プレイヤーで60秒対戦。ルームを作るか、ルームコードで参加してください。</p>
+
+      <label class="online-field">
+        <span>サーバーURL</span>
+        <input id="server-url-input" type="text" placeholder="http://localhost:3000" />
+      </label>
+
+      <div class="online-actions-row">
+        <button id="online-connect-button" class="primary-button">サーバーへ接続</button>
+        <button id="online-create-button" class="secondary-button">部屋を作成</button>
+      </div>
+
+      <label class="online-field">
+        <span>ルームコード</span>
+        <div class="join-row">
+          <input id="join-code-input" type="text" maxlength="4" placeholder="ABCD" />
+          <button id="online-join-button" class="primary-button">参加</button>
+        </div>
+      </label>
+
+      <div class="online-room-box">
+        <div>現在のルームコード: <b id="room-code-display">----</b></div>
+        <div>参加人数: <b id="room-players-display">0 / 2</b></div>
+      </div>
+
+      <div id="online-status" class="online-status">まずはサーバーへ接続してください。</div>
+      <button id="online-back-button" class="text-button">← タイトルへ戻る</button>
+    </div>
+  </section>
+
+  <div id="hud" class="game-ui hidden">
+    <div class="stage-label">STAGE 1</div>
+    <div class="stage-name">地下室</div>
+    <div id="score">退治 0 / 10</div>
+    <div id="score-secondary" class="hidden"></div>
+    <div id="timer" class="hidden"></div>
+  </div>
+
+  <div id="help" class="game-ui hidden"></div>
+
+  <div id="mobile-controls" class="game-ui touch-only hidden" aria-label="スマホ操作">
+    <div id="joystick-zone" aria-label="移動スティック">
+      <div id="joystick-base">
+        <div id="joystick-thumb"></div>
+      </div>
+    </div>
+    <button id="mobile-restart-button" type="button" aria-label="リスタート">↻</button>
+  </div>
+
+  <div id="orientation-hint" class="touch-only">横向きにすると遊びやすいです</div>
+
+  <div id="message" class="hidden">
+    <div id="clear-particles" aria-hidden="true">
+      <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+    </div>
+    <div id="message-card">
+      <div id="result-badge"></div>
+      <div id="message-title"></div>
+      <div id="message-sub"></div>
+      <div class="result-buttons">
+        <button id="restart-button" class="primary-button">もう一度</button>
+        <button id="stage-select-button" class="secondary-button">ステージ選択</button>
+        <button id="title-button" class="text-button">タイトルへ</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+  <script type="module" src="./js/main.js?v=10.0"></script>
+</body>
+</html>

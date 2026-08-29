@@ -1,0 +1,6 @@
+Rat Escape v9.3
+Stage 1: 地下室 / main_character.glb
+Stage 2: 部室 / tennisplayer.glb (animated Idle + Run)
+Clubroom camera: lowered view retained
+Clubroom obstacle layout: v9.2 layout retained
+Player start: e6

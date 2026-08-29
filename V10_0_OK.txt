@@ -1,0 +1,5 @@
+Rat Escape v10.0
+- Single stages: basement / clubroom
+- Online battle prototype: blue vs red
+- Stage size: a-l x 1-18
+- Requires npm start for online multiplayer server
