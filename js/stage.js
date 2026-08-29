@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { CELL_SIZE } from './config.js?v=10.0';
+import { CELL_SIZE } from './config.js?v=10.2';
 
 export class Stage {
   constructor(scene, data) {
@@ -594,6 +594,24 @@ export class Stage {
 
         warningDust.rotation.y = Math.PI / 2;
         warningDust.position.set(-this.width / 2 + 0.14, 0.64, cellPos.z);
+      } else if (pipe.side === 'right') {
+        tube.rotation.z = Math.PI / 2;
+        tube.position.set(this.width / 2 + 0.72, 0.64, cellPos.z);
+
+        mouth.rotation.y = -Math.PI / 2;
+        mouth.position.set(this.width / 2 + 0.02, 0.64, cellPos.z);
+
+        rim.rotation.y = -Math.PI / 2;
+        rim.position.set(this.width / 2 + 0.015, 0.64, cellPos.z);
+
+        warningRim.rotation.y = -Math.PI / 2;
+        warningRim.position.copy(rim.position);
+
+        warningGlow.rotation.y = -Math.PI / 2;
+        warningGlow.position.set(this.width / 2 - 0.12, 0.64, cellPos.z);
+
+        warningDust.rotation.y = -Math.PI / 2;
+        warningDust.position.set(this.width / 2 - 0.14, 0.64, cellPos.z);
       } else if (pipe.side === 'top') {
         tube.rotation.x = Math.PI / 2;
         tube.position.set(cellPos.x, 0.64, -this.depth / 2 - 0.72);

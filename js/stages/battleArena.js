@@ -29,7 +29,7 @@ export const battleArena = {
   playerStart: 'f9',
   playerStarts: {
     p1: 'f9',
-    p2: 'g10'
+    p2: 'g11'
   },
   duration: 60,
   occupiedCells,
@@ -48,13 +48,13 @@ export const battleArena = {
       type: 'animated',
       targetHeight: 1.78,
       modelName: 'BluePlayer',
-      url: './assets/models/main_character_blue.glb?v=10.0'
+      url: './assets/models/main_character_blue.glb?v=10.2'
     },
     p2: {
       type: 'animated',
       targetHeight: 1.78,
       modelName: 'RedPlayer',
-      url: './assets/models/main_character_red.glb?v=10.0'
+      url: './assets/models/main_character_red.glb?v=10.2'
     }
   }
 };

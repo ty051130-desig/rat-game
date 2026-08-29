@@ -1,0 +1,11 @@
+Rat Escape v10.1 fixes
+
+- P2 start moved from blocked g10 to free g11
+- P2 now receives its online slot correctly
+- Server applies input based on socket identity
+- Player avatars snap to valid start positions on first state
+- Newly spawned rats snap to the pipe mouth instead of flying from world origin
+- Rats physically emerge from the specified pipe side into the first cell
+- Dead-end fallback pathfinding prevents rats from freezing
+- Front-contact stun has cooldown to prevent permanent lock
+- Right-side pipe rendering added for c18

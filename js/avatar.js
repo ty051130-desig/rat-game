@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 
 const DEFAULT_YAW_OFFSET = Math.PI;
 const ANIMATED_TARGET_HEIGHT = 1.78;
@@ -24,17 +23,21 @@ export class CharacterAvatar {
     this.currentAnimationName = null;
     this.targetPosition = new THREE.Vector3();
     this.targetYaw = 0;
+    this.invulnerabilityRemaining = 0;
 
-    if (gltf) {
+    if (gltf?.scene) {
       this.installFromGLTF(gltf);
     } else {
-      this.visual = createFallbackCharacter(this.characterType);
+      console.warn('Online avatar GLB missing. Using fallback character.', this.characterConfig?.url);
+      this.visual = createFallbackCharacter(this.characterConfig);
       this.root.add(this.visual);
     }
   }
 
   installFromGLTF(gltf) {
-    const model = SkeletonUtils.clone(gltf.scene);
+    // Blue and red are different GLB files and each is instantiated once, so
+    // using the loaded scene directly is the most reliable path here.
+    const model = gltf.scene;
     model.name = this.characterConfig.modelName ?? 'CharacterAvatar';
     model.traverse((obj) => {
       if (obj.isMesh) {
@@ -98,6 +101,8 @@ export class CharacterAvatar {
     if (!state) return;
     this.targetPosition.set(state.x, 0, state.z);
     this.targetYaw = Number.isFinite(state.yaw) ? state.yaw : 0;
+    this.invulnerabilityRemaining = Math.max(0, Number(state.invulnerable) || 0);
+
     if (snap) {
       this.root.position.copy(this.targetPosition);
       this.root.rotation.y = this.targetYaw;
@@ -109,9 +114,20 @@ export class CharacterAvatar {
     if (this.mixer) this.mixer.update(dt);
     this.root.position.lerp(this.targetPosition, 1 - Math.exp(-dt * 12));
     this.root.rotation.y = rotateTowards(this.root.rotation.y, this.targetYaw, dt * 14);
+
+    this.invulnerabilityRemaining = Math.max(0, this.invulnerabilityRemaining - dt);
+    if (this.visual) {
+      if (this.invulnerabilityRemaining > 0) {
+        // Fast, readable blink while the player is invulnerable.
+        this.visual.visible = Math.floor(this.invulnerabilityRemaining * 10) % 2 === 0;
+      } else {
+        this.visual.visible = true;
+      }
+    }
   }
 
   destroy() {
+    if (this.visual) this.visual.visible = true;
     this.scene.remove(this.root);
   }
 }
@@ -130,12 +146,12 @@ function rotateTowards(current, target, maxStep) {
   return current + Math.sign(delta) * maxStep;
 }
 
-function createFallbackCharacter(type) {
+function createFallbackCharacter(characterConfig) {
   const group = new THREE.Group();
-  const color = type === 'floatingFace' ? 0x9d6f5a : 0x4f82c9;
+  const isRed = String(characterConfig?.modelName || '').toLowerCase().includes('red');
   const body = new THREE.Mesh(
     new THREE.CapsuleGeometry(0.36, 0.72, 5, 10),
-    new THREE.MeshStandardMaterial({ color, roughness: 0.7 })
+    new THREE.MeshStandardMaterial({ color: isRed ? 0xc94545 : 0x4f82c9, roughness: 0.7 })
   );
   body.position.y = 0.83;
   body.castShadow = true;

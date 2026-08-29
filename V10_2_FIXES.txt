@@ -1,0 +1,15 @@
+Rat Escape v10.2 patch
+
+ONLINE BATTLE
+- Bundles main_character_blue.glb and main_character_red.glb again so both player models are available.
+- Online avatar loading simplified to use each GLB scene directly.
+- Rear capture now requires the player to be clearly behind the rat.
+- Front/side/overlap contact resets that player's rat score to 0.
+- Front hit gives 3 seconds of invulnerability.
+- Invulnerable player blinks and cannot catch rats or be hit by rats.
+- Each player may take up to 2 front hits. The 3rd front hit immediately loses the match.
+- On a 3-hit loss, loser sees YOU LOSE and opponent sees YOU WIN.
+- HUD shows score and HIT x/3 for BLUE and RED.
+
+SINGLE PLAY
+- Clubroom clear target changed from 10 rats to 15 rats.

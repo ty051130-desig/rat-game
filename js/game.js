@@ -1,6 +1,6 @@
-import { Player } from './player.js?v=10.0';
-import { RatSpawner } from './ratSpawner.js?v=10.0';
-import { Stage } from './stage.js?v=10.0';
+import { Player } from './player.js?v=10.2';
+import { RatSpawner } from './ratSpawner.js?v=10.2';
+import { Stage } from './stage.js?v=10.2';
 
 export class Game {
   constructor(scene, stageData, playerGLTF = null) {
@@ -83,6 +83,6 @@ export class Game {
     this.state = 'lost';
     this.spawner.enabled = false;
     this.player.setAnimation?.('Idle');
-    this.showResult('lose', '×', 'GAME OVER', 'ネズミの正面につかまりました');
+    this.showResult('lose', '×', 'GAME OVER', 'ネズミにつかまりました');
   }
 }

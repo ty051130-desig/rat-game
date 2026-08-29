@@ -1,4 +1,4 @@
-import { Rat } from './rat.js?v=10.0';
+import { Rat } from './rat.js?v=10.2';
 
 export class RatSpawner {
   constructor(scene, stage, pipeDefs) {
@@ -65,7 +65,7 @@ export class RatSpawner {
     const xShake = Math.sin(this.visualTime * 19 + spawner.shakeSeed) * shakeAmount;
     const zShake = Math.cos(this.visualTime * 23 + spawner.shakeSeed) * shakeAmount;
 
-    if (spawner.side === 'left') {
+    if (spawner.side === 'left' || spawner.side === 'right') {
       spawner.visual.position.set(xShake * 0.25, 0, zShake);
     } else if (spawner.side === 'bottom' || spawner.side === 'top') {
       spawner.visual.position.set(xShake, 0, zShake * 0.25);

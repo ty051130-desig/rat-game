@@ -15,13 +15,13 @@ export const clubroom = {
 
   // e5 is blocked, so the player starts one cell to the right.
   playerStart: 'e6',
-  targetKills: 10,
+  targetKills: 15,
 
   character: {
     // v9.3: full-body tennis player with embedded Idle / Run actions.
     type: 'animated',
-    targetHeight: 2.20,
-    url: './assets/models/tennisplayer.glb?v=10.0'
+    targetHeight: 1.78,
+    url: './assets/models/main_character.glb?v=10.2'
   },
 
 

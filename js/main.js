@@ -1,14 +1,14 @@
 import * as THREE from 'three';
-import { CELL_SIZE } from './config.js?v=10.0';
-import { Game } from './game.js?v=10.0';
-import { loadGLB } from './modelLoader.js?v=10.0';
-import { basement } from './stages/basement.js?v=10.0';
-import { clubroom } from './stages/clubroom.js?v=10.0';
-import { battleArena } from './stages/battleArena.js?v=10.0';
-import { TouchControls } from './touchControls.js?v=10.0';
-import { OnlineMatchClient } from './onlineMatch.js?v=10.0';
+import { CELL_SIZE } from './config.js?v=10.2';
+import { Game } from './game.js?v=10.2';
+import { loadGLB } from './modelLoader.js?v=10.2';
+import { basement } from './stages/basement.js?v=10.2';
+import { clubroom } from './stages/clubroom.js?v=10.2';
+import { battleArena } from './stages/battleArena.js?v=10.2';
+import { TouchControls } from './touchControls.js?v=10.2';
+import { OnlineMatchClient } from './onlineMatch.js?v=10.2';
 
-console.log('=== RAT ESCAPE VERSION 10.0 ===');
+console.log('=== RAT ESCAPE VERSION 10.2 ===');
 
 const SOLO_STAGES = new Map([
   [basement.id, basement],
@@ -150,12 +150,12 @@ function showHudForOnline() {
   helpEl.classList.remove('hidden');
   stageLabelEl.textContent = 'ONLINE BATTLE';
   stageNameEl.textContent = battleArena.name;
-  scoreEl.textContent = 'BLUE 0';
-  scoreSecondaryEl.textContent = 'RED 0';
+  scoreEl.textContent = 'BLUE 0  •  HIT 0/3';
+  scoreSecondaryEl.textContent = 'RED 0  •  HIT 0/3';
   scoreSecondaryEl.classList.remove('hidden');
   timerEl.textContent = 'TIME 60';
   timerEl.classList.remove('hidden');
-  helpEl.innerHTML = '<b>60秒対戦</b><br>背後から触れた人がネズミを獲得<br>正面で触れると少し足止めされます';
+  helpEl.innerHTML = '<b>60秒対戦</b><br>背後から触れる → +1匹<br>正面・横から接触 → 得点0 / 3秒無敵<br><b>3回接触したら即敗北</b>';
 }
 
 function hideGameplayUI() {
@@ -252,6 +252,8 @@ async function connectOnline() {
     mode = 'online-ended';
     const p1 = payload.scores.p1;
     const p2 = payload.scores.p2;
+    const h1 = payload.hits?.p1 ?? 0;
+    const h2 = payload.hits?.p2 ?? 0;
     const localWon = (payload.winner === onlineMatch.localSlot);
     const draw = payload.winner === 'draw';
     messageEl.classList.remove('hidden', 'win', 'lose');
@@ -260,7 +262,13 @@ async function connectOnline() {
     document.querySelector('#message-title').textContent = draw
       ? 'DRAW'
       : (localWon ? 'YOU WIN!' : 'YOU LOSE');
-    document.querySelector('#message-sub').textContent = `BLUE ${p1} - RED ${p2}`;
+
+    if (payload.reason === 'three_hits') {
+      const loserName = payload.loser === 'p1' ? 'BLUE' : 'RED';
+      document.querySelector('#message-sub').textContent = `${loserName} がネズミに3回ぶつかりました  •  BLUE ${p1} - RED ${p2}`;
+    } else {
+      document.querySelector('#message-sub').textContent = `TIME UP  •  BLUE ${p1} - RED ${p2}  •  HIT ${h1}/3 - ${h2}/3`;
+    }
   };
   onlineMatch.onRoomClosed = (payload) => {
     onlineStatusEl.textContent = payload.message;
@@ -402,8 +410,8 @@ function animate() {
     onlineMatch.update(dt);
     if (onlineMatch.latestSnapshot) {
       const snap = onlineMatch.latestSnapshot;
-      scoreEl.textContent = `BLUE ${snap.players.p1.score}`;
-      scoreSecondaryEl.textContent = `RED ${snap.players.p2.score}`;
+      scoreEl.textContent = `BLUE ${snap.players.p1.score}  •  HIT ${snap.players.p1.hits ?? 0}/3`;
+      scoreSecondaryEl.textContent = `RED ${snap.players.p2.score}  •  HIT ${snap.players.p2.hits ?? 0}/3`;
       timerEl.textContent = `TIME ${Math.ceil(snap.timeLeft)}`;
     }
   } else if (onlineMatch && (mode === 'online-loading' || mode === 'online-setup')) {

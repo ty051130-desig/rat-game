@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { CharacterAvatar } from './avatar.js?v=10.0';
-import { Stage } from './stage.js?v=10.0';
+import { CharacterAvatar } from './avatar.js?v=10.2';
+import { Stage } from './stage.js?v=10.2';
 
 export class OnlineMatchClient {
   constructor(scene, stageData, assets = {}) {
@@ -16,6 +16,7 @@ export class OnlineMatchClient {
     this.avatars = new Map();
     this.ratVisuals = new Map();
     this.latestSnapshot = null;
+    this.hasSnapshot = false;
     this.sendTimer = 0;
     this.input = { x: 0, z: 0 };
 
@@ -44,6 +45,14 @@ export class OnlineMatchClient {
       this.connectedPlayers = payload.players;
       this.onRoom({ code: this.roomCode, slot: this.localSlot, players: this.connectedPlayers });
       this.onStatus(`部屋 ${this.roomCode} を作成しました。相手の参加を待っています。`);
+    });
+
+    this.socket.on('room_joined', (payload) => {
+      this.roomCode = payload.code;
+      this.localSlot = payload.slot;
+      this.connectedPlayers = payload.players;
+      this.onRoom({ code: this.roomCode, slot: this.localSlot, players: this.connectedPlayers });
+      this.onStatus(`部屋 ${this.roomCode} に参加しました。`);
     });
 
     this.socket.on('room_update', (payload) => {
@@ -89,6 +98,8 @@ export class OnlineMatchClient {
         this.assets[slot] ?? null,
         this.stageData.battleCharacters[slot]
       );
+      const start = this.stage.cellToWorld(this.stageData.playerStarts[slot]);
+      avatar.applyState({ x: start.x, z: start.z, yaw: slot === 'p1' ? 0 : Math.PI, moving: false }, true);
       this.avatars.set(slot, avatar);
     }
   }
@@ -116,10 +127,8 @@ export class OnlineMatchClient {
       this.sendTimer += dt;
       while (this.sendTimer >= 0.05) {
         this.sendTimer -= 0.05;
-        if (this.roomCode && this.localSlot) {
+        if (this.roomCode) {
           this.socket?.emit('player_input', {
-            roomCode: this.roomCode,
-            slot: this.localSlot,
             inputX: this.input.x,
             inputZ: this.input.z
           });
@@ -132,20 +141,24 @@ export class OnlineMatchClient {
   }
 
   applySnapshot(snapshot) {
+    const snapPlayers = !this.hasSnapshot;
     for (const slot of ['p1', 'p2']) {
       const avatar = this.avatars.get(slot);
       if (!avatar) continue;
-      avatar.applyState(snapshot.players[slot], false);
+      avatar.applyState(snapshot.players[slot], snapPlayers);
     }
+    this.hasSnapshot = true;
 
     const seen = new Set();
     for (const state of snapshot.rats) {
       let visual = this.ratVisuals.get(state.id);
       if (!visual) {
         visual = new RatVisual(this.scene);
+        visual.applyState(state, true);
         this.ratVisuals.set(state.id, visual);
+      } else {
+        visual.applyState(state, false);
       }
-      visual.applyState(state);
       seen.add(state.id);
     }
 
@@ -166,9 +179,13 @@ class RatVisual {
     this.targetYaw = 0;
   }
 
-  applyState(state) {
+  applyState(state, snap = false) {
     this.targetPosition.set(state.x, 0, state.z);
     this.targetYaw = state.yaw ?? 0;
+    if (snap) {
+      this.root.position.copy(this.targetPosition);
+      this.root.rotation.y = this.targetYaw;
+    }
   }
 
   update(dt) {

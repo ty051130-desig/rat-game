@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Rat Escape - v10.0</title>
-  <link rel="stylesheet" href="./style.css?v=10.0" />
+  <title>Rat Escape - v10.2</title>
+  <link rel="stylesheet" href="./style.css?v=10.2" />
   <script type="importmap">
   {
     "imports": {
@@ -20,10 +20,10 @@
   <section id="title-screen" class="menu-screen">
     <div class="title-vignette"></div>
     <div class="menu-panel title-panel">
-      <div class="eyebrow">CHASE • TURN • CATCH</div>
-      <div class="version-badge">VERSION 10.0 • ONLINE BATTLE PROTOTYPE</div>
+      <div class="eyebrow"></div>
+      <div class="version-badge">VERSION 10.2 • ONLINE BATTLE PROTOTYPE</div>
       <h1>RAT ESCAPE</h1>
-      <p class="title-copy">背後を取れば、立場は逆転。</p>
+      <p class="title-copy"></p>
       <div class="title-actions vertical-actions">
         <button id="title-start-button" class="primary-button">SINGLE PLAY</button>
         <button id="title-online-button" class="primary-button accent-red">ONLINE BATTLE</button>
@@ -40,23 +40,18 @@
       <div class="howto-grid">
         <article class="howto-card">
           <div class="howto-icon">01</div>
-          <h3>シングルプレイ</h3>
-          <p><span class="desktop-only-inline">WASD / 矢印キー</span><span class="touch-only-inline">左下のスティック</span>で主人公を動かし、ネズミの背後から触れて退治します。</p>
+          <h3>基本操作</h3>
+          <p><span class="desktop-only-inline">WASD / 矢印キー</span><span class="touch-only-inline">左下のスティック</span>で主人公を動かし、ネズミの背後から触れて退治します。ネズミの正面には触れてはいけません。</p>
         </article>
         <article class="howto-card danger">
           <div class="howto-icon">02</div>
-          <h3>正面は危険</h3>
-          <p>シングルプレイではネズミの進行方向側で捕まると <b>GAME OVER</b> です。</p>
-        </article>
-        <article class="howto-card attack">
-          <div class="howto-icon">03</div>
-          <h3>オンライン対戦</h3>
-          <p>2人で60秒対戦。より多くのネズミを背後から捕まえた方が勝ちです。</p>
+          <h3>シングルプレイ</h3>
+          <p>シングルプレイでは、決められた数だけネズミを退治すればクリアです。</p>
         </article>
         <article class="howto-card warning">
-          <div class="howto-icon">04</div>
-          <h3>対戦のコツ</h3>
-          <p>正面で触れると少し足止め。障害物で回り込んで、相手より先に背後を取ろう。</p>
+          <div class="howto-icon">03</div>
+          <h3>オンライン対戦</h3>
+          <p>2人で60秒対戦。より多くのネズミを背後から捕まえた方が勝ち。ネズミに捕まると退治数が0になり、3秒間だけ当たり判定がなくなります。その3秒間はネズミを退治できません。3回正面衝突したプレイヤーは時間内でも即敗北です。</p>
         </article>
       </div>
       <div class="howto-actions">
@@ -74,21 +69,21 @@
         <button id="basement-stage-button" class="stage-card available basement-card">
           <span class="stage-number">STAGE 1</span>
           <span class="stage-card-title">地下室</span>
-          <span class="stage-card-desc">main_character で挑戦。倉庫の障害物を利用して10匹退治しよう。</span>
+          <span class="stage-card-desc">難易度：ふつう</span>
           <span class="stage-card-action">PLAY</span>
         </button>
 
         <button id="clubroom-stage-button" class="stage-card available clubroom-card">
           <span class="stage-number">STAGE 2</span>
           <span class="stage-card-title">部室</span>
-          <span class="stage-card-desc">tennisplayer で挑戦。Idle / Run アニメーションで部室を駆け回れ。</span>
+          <span class="stage-card-desc">難易度：むずかしい</span>
           <span class="stage-card-action">PLAY</span>
         </button>
 
         <div class="stage-card available battle-card passive-card">
-          <span class="stage-number">BATTLE</span>
-          <span class="stage-card-title">オンライン対戦</span>
-          <span class="stage-card-desc">青と赤の2人で60秒勝負。タイトルから ONLINE BATTLE を選択。</span>
+          <span class="stage-number">COMMING SOON</span>
+          <span class="stage-card-title"></span>
+          <span class="stage-card-desc"></span>
         </div>
       </div>
       <button id="stage-back-button" class="text-button">← タイトルへ戻る</button>
@@ -167,6 +162,6 @@
   </div>
 
   <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
-  <script type="module" src="./js/main.js?v=10.0"></script>
+  <script type="module" src="./js/main.js?v=10.2"></script>
 </body>
 </html>

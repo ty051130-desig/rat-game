@@ -16,6 +16,9 @@ const PLAYER_TURN_SPEED = 10;
 const RAT_SPEED = 2.7;
 const RAT_CONTACT_DISTANCE = 0.88;
 const MATCH_DURATION = 60;
+const INVULNERABLE_SECONDS = 3.0;
+const MAX_FRONT_HITS = 3;
+const BACK_CAPTURE_DOT_THRESHOLD = -0.20;
 const TICK_RATE = 20;
 const DT = 1 / TICK_RATE;
 
@@ -26,7 +29,7 @@ const battleStage = {
   cols: 18,
   playerStarts: {
     p1: 'f9',
-    p2: 'g10'
+    p2: 'g11'
   },
   occupiedCells: [
     'b2','b3','b5','b6','b8','b9','b10','b12','b13','b14','b16','b17',
@@ -142,6 +145,51 @@ function findPath(stage, startCell, startFacing, goalCell) {
   return reversed;
 }
 
+
+function findPathAnyDirection(stage, startCell, goalCell) {
+  if (!startCell || !goalCell) return [];
+  if (startCell.row === goalCell.row && startCell.col === goalCell.col) return [startCell];
+
+  const queue = [startCell];
+  let head = 0;
+  const startKey = `${startCell.row},${startCell.col}`;
+  const visited = new Set([startKey]);
+  const parent = new Map();
+  let goalKey = null;
+
+  while (head < queue.length) {
+    const current = queue[head++];
+    for (const dir of DIRECTIONS) {
+      const d = DIR_DELTA[dir];
+      const next = { row: current.row + d.dr, col: current.col + d.dc };
+      if (!stage.isWalkableCell(next.row, next.col)) continue;
+      const nextKey = `${next.row},${next.col}`;
+      if (visited.has(nextKey)) continue;
+      visited.add(nextKey);
+      parent.set(nextKey, { prevKey: `${current.row},${current.col}`, cell: next });
+      if (next.row === goalCell.row && next.col === goalCell.col) {
+        goalKey = nextKey;
+        queue.length = 0;
+        break;
+      }
+      queue.push(next);
+    }
+  }
+
+  if (!goalKey) return [startCell];
+  const reversed = [];
+  let cursor = goalKey;
+  while (cursor !== startKey) {
+    const info = parent.get(cursor);
+    if (!info) break;
+    reversed.push(info.cell);
+    cursor = info.prevKey;
+  }
+  reversed.push(startCell);
+  reversed.reverse();
+  return reversed;
+}
+
 class StageLogic {
   constructor(data) {
     this.data = data;
@@ -209,21 +257,27 @@ class StageLogic {
 let nextRatId = 1;
 
 class RatLogic {
-  constructor(stage, spawnCellName, facing) {
+  constructor(stage, pipe) {
     this.id = `rat-${nextRatId++}`;
     this.stage = stage;
-    this.cell = stage.parseCell(spawnCellName);
-    this.facing = facing;
-    this.targetFacing = facing;
+    this.cell = stage.parseCell(pipe.cell);
+    this.facing = pipe.facing;
+    this.targetFacing = pipe.facing;
     this.speed = RAT_SPEED;
     this.dead = false;
 
-    const p = stage.cellToWorld(this.cell);
-    this.x = p.x;
-    this.z = p.z;
-    this.from = { ...p };
-    this.to = { ...p };
-    this.targetCell = null;
+    const cellCenter = stage.cellToWorld(this.cell);
+    const heading = headingVector(pipe.facing);
+
+    // Spawn just outside the wall, at the actual pipe mouth, then travel into
+    // the first grid cell. This prevents rats from appearing to fly in from
+    // the centre of the arena.
+    this.x = cellCenter.x - heading.x * 1.28;
+    this.z = cellCenter.z - heading.z * 1.28;
+    this.from = { x: this.x, z: this.z };
+    this.to = { ...cellCenter };
+    this.targetCell = { ...this.cell };
+    this.enteringFromPipe = true;
     this.progress = 0;
   }
 
@@ -246,7 +300,14 @@ class RatLogic {
     const goal = this.stage.worldToCell(best.x, best.z);
     if (!goal) return;
 
-    const path = findPath(this.stage, this.cell, this.facing, goal);
+    let path = findPath(this.stage, this.cell, this.facing, goal);
+
+    // Normal movement forbids an instant 180-degree turn. If that rule leaves
+    // the rat trapped in a dead end, fall back to ordinary BFS so it can turn
+    // around instead of freezing permanently.
+    if (path.length < 2) {
+      path = findPathAnyDirection(this.stage, this.cell, goal);
+    }
     if (path.length < 2) return;
     const next = path[1];
     const nextFacing = directionFromStep(this.cell, next);
@@ -266,9 +327,10 @@ class RatLogic {
     while (remainingDistance > 0.00001 && safety++ < 6) {
       if (!this.targetCell) this.chooseNext(players);
       if (!this.targetCell) break;
-      const remainingInSegment = CELL_SIZE * (1 - this.progress);
+      const segmentLength = Math.max(0.001, Math.hypot(this.to.x - this.from.x, this.to.z - this.from.z));
+      const remainingInSegment = segmentLength * (1 - this.progress);
       const travel = Math.min(remainingDistance, remainingInSegment);
-      this.progress += travel / CELL_SIZE;
+      this.progress += travel / segmentLength;
       remainingDistance -= travel;
       const t = Math.min(this.progress, 1);
       this.x = this.from.x + (this.to.x - this.from.x) * t;
@@ -282,6 +344,7 @@ class RatLogic {
         this.targetCell = null;
         this.progress = 0;
         this.from = { x: this.x, z: this.z };
+        if (this.enteringFromPipe) this.enteringFromPipe = false;
         this.chooseNext(players);
       }
     }
@@ -329,7 +392,8 @@ function createPlayerState(slot, stage) {
     inputZ: 0,
     moving: false,
     score: 0,
-    stun: 0
+    hits: 0,
+    invulnerable: 0
   };
 }
 
@@ -349,7 +413,8 @@ function resetRoomForMatch(room) {
     player.inputZ = 0;
     player.moving = false;
     player.score = 0;
-    player.stun = 0;
+    player.hits = 0;
+    player.invulnerable = 0;
   }
 }
 
@@ -377,7 +442,8 @@ function roomSnapshot(room) {
         yaw: room.players.p1.yaw,
         moving: room.players.p1.moving,
         score: room.players.p1.score,
-        stun: room.players.p1.stun,
+        hits: room.players.p1.hits,
+        invulnerable: room.players.p1.invulnerable,
         connected: room.players.p1.connected
       },
       p2: {
@@ -386,7 +452,8 @@ function roomSnapshot(room) {
         yaw: room.players.p2.yaw,
         moving: room.players.p2.moving,
         score: room.players.p2.score,
-        stun: room.players.p2.stun,
+        hits: room.players.p2.hits,
+        invulnerable: room.players.p2.invulnerable,
         connected: room.players.p2.connected
       }
     },
@@ -427,14 +494,19 @@ io.on('connection', (socket) => {
       return;
     }
     attachPlayerToRoom(socket, room, 'p2');
+    socket.emit('room_joined', { code: room.code, slot: 'p2', players: playerCount(room) });
     io.to(room.code).emit('room_update', { code: room.code, players: playerCount(room) });
     if (playerCount(room) === 2) startMatch(room);
   });
 
   socket.on('player_input', (data) => {
-    const { roomCode, slot, inputX, inputZ } = data || {};
+    // Never trust a client-provided slot. The server already knows which
+    // socket owns p1/p2, so input is always applied to the correct player.
+    const roomCode = socket.data.roomCode;
+    const slot = socket.data.slot;
+    const { inputX, inputZ } = data || {};
     const room = rooms.get(roomCode);
-    if (!room || !room.players[slot]) return;
+    if (!room || !slot || !room.players[slot]) return;
     room.players[slot].inputX = Number.isFinite(inputX) ? Math.max(-1, Math.min(1, inputX)) : 0;
     room.players[slot].inputZ = Number.isFinite(inputZ) ? Math.max(-1, Math.min(1, inputZ)) : 0;
   });
@@ -488,11 +560,7 @@ function updatePlayers(room, dt) {
     const player = room.players[slot];
     if (!player.connected) continue;
 
-    if (player.stun > 0) {
-      player.stun = Math.max(0, player.stun - dt);
-      player.moving = false;
-      continue;
-    }
+    player.invulnerable = Math.max(0, (player.invulnerable || 0) - dt);
 
     let dx = player.inputX;
     let dz = player.inputZ;
@@ -526,7 +594,7 @@ function updatePipes(room, dt) {
     pipe.timer -= dt;
     if (pipe.timer <= 0) {
       if (!isSpawnCellBusy(room, pipe.cell)) {
-        room.rats.push(new RatLogic(room.stage, pipe.cell, pipe.facing));
+        room.rats.push(new RatLogic(room.stage, pipe));
         pipe.timer += pipe.interval;
       } else {
         pipe.timer = 0.4;
@@ -537,36 +605,91 @@ function updatePipes(room, dt) {
 
 function resolveRatContacts(room) {
   const livePlayers = ['p1', 'p2'].filter((slot) => room.players[slot].connected);
+
   for (const rat of [...room.rats]) {
     rat.update(DT, room.players);
 
-    const candidates = [];
+    const rearCandidates = [];
     const frontHits = [];
+
     for (const slot of livePlayers) {
       const player = room.players[slot];
+
+      // During the 3-second invulnerability period, rats cannot hurt this
+      // player and this player cannot capture rats either.
+      if ((player.invulnerable || 0) > 0) continue;
+
       const dx = player.x - rat.x;
       const dz = player.z - rat.z;
       const distSq = dx * dx + dz * dz;
       if (distSq > RAT_CONTACT_DISTANCE * RAT_CONTACT_DISTANCE) continue;
+
       const heading = headingVector(rat.targetFacing || rat.facing);
       const dot = dx * heading.x + dz * heading.z;
-      if (dot >= 0) frontHits.push({ slot, distSq });
-      else candidates.push({ slot, distSq });
+
+      // A capture is awarded only when the player is clearly behind the rat.
+      // Side/overlap contacts (including almost identical positions) count as
+      // a frontal hit instead of accidentally becoming a capture.
+      if (dot <= BACK_CAPTURE_DOT_THRESHOLD) {
+        rearCandidates.push({ slot, distSq });
+      } else {
+        frontHits.push({ slot, distSq });
+      }
     }
 
-    if (candidates.length) {
-      candidates.sort((a, b) => a.distSq - b.distSq);
-      room.players[candidates[0].slot].score += 1;
-      rat.dead = true;
-      room.rats = room.rats.filter((r) => r !== rat);
-      continue;
-    }
-
+    // Apply frontal penalties first. This makes a dangerous front collision
+    // take priority over a simultaneous ambiguous overlap.
     if (frontHits.length) {
       frontHits.sort((a, b) => a.distSq - b.distSq);
-      room.players[frontHits[0].slot].stun = 0.8;
+
+      for (const hit of frontHits) {
+        const player = room.players[hit.slot];
+        if ((player.invulnerable || 0) > 0) continue;
+
+        player.score = 0;
+        player.hits += 1;
+        player.invulnerable = INVULNERABLE_SECONDS;
+
+        if (player.hits >= MAX_FRONT_HITS) {
+          finishMatchByKnockout(room, hit.slot);
+          return;
+        }
+      }
+    }
+
+    if (room.finished) return;
+
+    // Players that were hit above are now invulnerable and therefore cannot
+    // capture the same rat during this tick.
+    const validRear = rearCandidates.filter(({ slot }) => (room.players[slot].invulnerable || 0) <= 0);
+    if (validRear.length) {
+      validRear.sort((a, b) => a.distSq - b.distSq);
+      room.players[validRear[0].slot].score += 1;
+      rat.dead = true;
+      room.rats = room.rats.filter((r) => r !== rat);
     }
   }
+}
+
+function finishMatchByKnockout(room, loser) {
+  if (room.finished) return;
+  room.started = false;
+  room.finished = true;
+  const winner = loser === 'p1' ? 'p2' : 'p1';
+  io.to(room.code).emit('match_ended', {
+    code: room.code,
+    winner,
+    loser,
+    reason: 'three_hits',
+    scores: {
+      p1: room.players.p1.score,
+      p2: room.players.p2.score
+    },
+    hits: {
+      p1: room.players.p1.hits,
+      p2: room.players.p2.hits
+    }
+  });
 }
 
 function finishMatch(room) {
@@ -580,7 +703,10 @@ function finishMatch(room) {
   io.to(room.code).emit('match_ended', {
     code: room.code,
     winner,
-    scores: { p1, p2 }
+    loser: winner === 'p1' ? 'p2' : winner === 'p2' ? 'p1' : null,
+    reason: 'time',
+    scores: { p1, p2 },
+    hits: { p1: room.players.p1.hits, p2: room.players.p2.hits }
   });
 }
 
@@ -597,5 +723,5 @@ setInterval(() => {
 }, 1000 / TICK_RATE);
 
 server.listen(PORT, () => {
-  console.log(`Rat Escape v10.0 server running: http://localhost:${PORT}`);
+  console.log(`Rat Escape v10.2 server running: http://localhost:${PORT}`);
 });

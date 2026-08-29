@@ -471,7 +471,7 @@ button.stage-card { cursor: pointer; }
   opacity: 0.82;
 }
 
-/* ===== v10.0 online battle additions ===== */
+/* ===== v10.2 online battle additions ===== */
 .vertical-actions {
   display: flex;
   flex-direction: column;
