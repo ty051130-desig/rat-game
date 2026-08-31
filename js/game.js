@@ -1,6 +1,6 @@
-import { Player } from './player.js?v=10.2';
-import { RatSpawner } from './ratSpawner.js?v=10.2';
-import { Stage } from './stage.js?v=10.2';
+import { Player } from './player.js?v=11.2';
+import { RatSpawner } from './ratSpawner.js?v=11.2';
+import { Stage } from './stage.js?v=11.2';
 
 export class Game {
   constructor(scene, stageData, playerGLTF = null) {

@@ -1,0 +1,41 @@
+Rat Escape v11.2 - STAGE 3 layout
+
+# = obstacle
+. = open floor
+
+   123456789012345678
+a  .................#
+b  .#.#.#.#.###.#.#.#
+c  ...#...#.........#
+d  .#.#.###.#.#.###.#
+e  .#................
+f  .#.#.#.###.#.#.#.#
+g  ..................
+h  .#.#.#.#.#.###.#.#
+i  .......#.....#...#
+j  .###.#.#.#.#.#.###
+k  ..................
+l  .###.#.#.#.###.###
+
+Start: g9
+Clear: 20 rats
+Pipes:
+- a3  / top    / S / first 1.4s / every 8.4s
+- g18 / right  / W / first 5.8s / every 9.1s
+- l9  / bottom / N / first 10.5s / every 9.8s
+- g1  / left   / E / first 15.5s / every 10.6s
+- a15 / top    / S / first 21.0s / every 11.4s
+
+Opening capture idea:
+The obstacle at h10 is surrounded by a complete one-cell-wide loop:
+  g9 -> g10 -> g11 -> h11 -> i11 -> i10 -> i9 -> h9 -> g9
+The first rat approaches from a3 toward the central g-row. Because the player is much faster,
+this loop can be used to circle around instead of turning face-to-face in a dead-end corridor.
+Similar loops exist throughout the stage and are intended to be chained as later pipes activate.
+
+Static validation:
+- blocked cells: 72
+- open cells: 144
+- open 2x2 blocks: 0
+- all open cells connected: YES
+- cycle rank: 28

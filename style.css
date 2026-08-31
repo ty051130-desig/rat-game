@@ -471,7 +471,7 @@ button.stage-card { cursor: pointer; }
   opacity: 0.82;
 }
 
-/* ===== v10.2 online battle additions ===== */
+/* ===== v11.0 online battle additions ===== */
 .vertical-actions {
   display: flex;
   flex-direction: column;
@@ -547,4 +547,47 @@ button.stage-card { cursor: pointer; }
 
 .passive-card {
   cursor: default;
+}
+
+/* ---------- v11.0 Stage 3: Extreme Facility ---------- */
+.stage-card.facility-card {
+  border-color: rgba(137, 204, 194, .30);
+  background: linear-gradient(145deg, rgba(28, 58, 59, .76), rgba(17, 28, 31, .93));
+}
+.stage-card.facility-card::after {
+  background: linear-gradient(135deg, rgba(132, 206, 193, .14), transparent 60%);
+}
+
+/* ===== v11.2 countdown / rematch ===== */
+#countdown-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 48;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  background: rgba(7, 10, 13, 0.18);
+}
+
+#countdown-text {
+  min-width: min(72vw, 420px);
+  padding: 18px 28px;
+  border-radius: 24px;
+  text-align: center;
+  font-size: clamp(52px, 13vw, 116px);
+  line-height: 1;
+  font-weight: 1000;
+  letter-spacing: 0.03em;
+  color: #f8f8f2;
+  text-shadow: 0 4px 28px rgba(0, 0, 0, 0.7);
+  background: rgba(12, 16, 20, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(6px);
+}
+
+@media (max-width: 640px) {
+  #countdown-text {
+    min-width: min(82vw, 360px);
+    font-size: clamp(44px, 17vw, 86px);
+  }
 }

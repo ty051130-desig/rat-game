@@ -1,4 +1,4 @@
-import { Rat } from './rat.js?v=10.2';
+import { Rat } from './rat.js?v=11.2';
 
 export class RatSpawner {
   constructor(scene, stage, pipeDefs) {

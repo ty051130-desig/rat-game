@@ -48,13 +48,13 @@ export const battleArena = {
       type: 'animated',
       targetHeight: 1.78,
       modelName: 'BluePlayer',
-      url: './assets/models/main_character_blue.glb?v=10.2'
+      url: './assets/models/main_character_blue.glb?v=11.2'
     },
     p2: {
       type: 'animated',
       targetHeight: 1.78,
       modelName: 'RedPlayer',
-      url: './assets/models/main_character_red.glb?v=10.2'
+      url: './assets/models/main_character_red.glb?v=11.2'
     }
   }
 };

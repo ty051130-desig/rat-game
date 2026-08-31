@@ -1,7 +1,7 @@
 @echo off
 cd /d %~dp0
 echo ================================
-echo Rat Escape v10.0 Online Server
+echo Rat Escape v11.2 Online Server
 echo ================================
 where npm >nul 2>nul
 if errorlevel 1 (

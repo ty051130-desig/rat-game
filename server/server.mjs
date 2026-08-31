@@ -376,7 +376,10 @@ function createRoom() {
     started: false,
     finished: false,
     timeLeft: MATCH_DURATION,
-    lastSnapshotAt: 0
+    lastSnapshotAt: 0,
+    rematchReady: { p1: false, p2: false },
+    countdownActive: false,
+    countdownToken: 0
   };
 }
 
@@ -403,6 +406,7 @@ function resetRoomForMatch(room) {
   room.timeLeft = MATCH_DURATION;
   room.finished = false;
   room.started = true;
+  room.rematchReady = { p1: false, p2: false };
   for (const slot of ['p1', 'p2']) {
     const player = room.players[slot];
     const start = room.stage.cellToWorld(battleStage.playerStarts[slot]);
@@ -496,7 +500,28 @@ io.on('connection', (socket) => {
     attachPlayerToRoom(socket, room, 'p2');
     socket.emit('room_joined', { code: room.code, slot: 'p2', players: playerCount(room) });
     io.to(room.code).emit('room_update', { code: room.code, players: playerCount(room) });
-    if (playerCount(room) === 2) startMatch(room);
+    if (playerCount(room) === 2) beginMatchCountdown(room);
+  });
+
+  socket.on('rematch_ready', () => {
+    const roomCode = socket.data.roomCode;
+    const slot = socket.data.slot;
+    const room = rooms.get(roomCode);
+    if (!room || !slot || !room.players[slot]?.connected || !room.finished) return;
+
+    room.rematchReady[slot] = true;
+    io.to(room.code).emit('rematch_status', {
+      ready: { ...room.rematchReady },
+      players: playerCount(room)
+    });
+
+    if (
+      playerCount(room) === 2 &&
+      room.rematchReady.p1 &&
+      room.rematchReady.p2
+    ) {
+      beginMatchCountdown(room);
+    }
   });
 
   socket.on('player_input', (data) => {
@@ -544,6 +569,34 @@ function detachSocket(socket) {
 
   io.to(room.code).emit('room_closed', { message: '相手が退出したため対戦を終了しました。' });
   rooms.delete(room.code);
+}
+
+function beginMatchCountdown(room) {
+  if (room.countdownActive || playerCount(room) !== 2) return;
+
+  room.countdownActive = true;
+  room.started = false;
+  room.finished = false;
+  room.rematchReady = { p1: false, p2: false };
+  const token = ++room.countdownToken;
+
+  const steps = [3, 2, 1, 'START!'];
+  steps.forEach((value, index) => {
+    setTimeout(() => {
+      const current = rooms.get(room.code);
+      if (!current || current.countdownToken !== token || playerCount(current) !== 2) return;
+      io.to(current.code).emit('countdown', { value });
+
+      if (value === 'START!') {
+        setTimeout(() => {
+          const latest = rooms.get(room.code);
+          if (!latest || latest.countdownToken !== token || playerCount(latest) !== 2) return;
+          latest.countdownActive = false;
+          startMatch(latest);
+        }, 650);
+      }
+    }, index * 1000);
+  });
 }
 
 function startMatch(room) {
@@ -675,6 +728,7 @@ function finishMatchByKnockout(room, loser) {
   if (room.finished) return;
   room.started = false;
   room.finished = true;
+  room.rematchReady = { p1: false, p2: false };
   const winner = loser === 'p1' ? 'p2' : 'p1';
   io.to(room.code).emit('match_ended', {
     code: room.code,
@@ -695,6 +749,7 @@ function finishMatchByKnockout(room, loser) {
 function finishMatch(room) {
   room.started = false;
   room.finished = true;
+  room.rematchReady = { p1: false, p2: false };
   const p1 = room.players.p1.score;
   const p2 = room.players.p2.score;
   let winner = 'draw';
@@ -723,5 +778,5 @@ setInterval(() => {
 }, 1000 / TICK_RATE);
 
 server.listen(PORT, () => {
-  console.log(`Rat Escape v10.2 server running: http://localhost:${PORT}`);
+  console.log(`Rat Escape v11.2 server running: http://localhost:${PORT}`);
 });

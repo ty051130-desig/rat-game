@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { CELL_SIZE, RAT_CONTACT_DISTANCE, RAT_SPEED } from './config.js?v=10.2';
-import { DIR_DELTA, directionFromStep, findPath } from './pathfinding.js?v=10.2';
+import { CELL_SIZE, RAT_CONTACT_DISTANCE, RAT_SPEED } from './config.js?v=11.2';
+import { DIR_DELTA, directionFromStep, findPath } from './pathfinding.js?v=11.2';
 
 export class Rat {
   constructor(scene, stage, spawnCellName, facing) {

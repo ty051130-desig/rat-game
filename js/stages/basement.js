@@ -11,7 +11,7 @@ export const basement = {
   character: {
     type: 'animated',
     targetHeight: 1.78,
-    url: './assets/models/main_character.glb?v=10.2'
+    url: './assets/models/main_character.glb?v=11.2'
   },
 
   occupiedCells: [

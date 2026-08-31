@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { CELL_SIZE } from './config.js?v=10.2';
+import { CELL_SIZE } from './config.js?v=11.2';
 
 export class Stage {
   constructor(scene, data) {
@@ -75,12 +75,13 @@ export class Stage {
 
   buildEnvironment() {
     const isClubroom = this.data.theme === 'clubroom';
+    const isFacility = this.data.theme === 'facility';
 
     const floor = new THREE.Mesh(
       new THREE.BoxGeometry(this.width + 0.5, 0.35, this.depth + 0.5),
       new THREE.MeshStandardMaterial({
-        color: isClubroom ? 0x777161 : 0x555955,
-        roughness: isClubroom ? 0.9 : 0.96,
+        color: isClubroom ? 0x777161 : (isFacility ? 0x465456 : 0x555955),
+        roughness: isClubroom ? 0.9 : (isFacility ? 0.84 : 0.96),
         metalness: 0.03
       })
     );
@@ -90,7 +91,7 @@ export class Stage {
 
     // Low boundary walls keep the full playfield readable from the fixed camera.
     const wallMaterial = new THREE.MeshStandardMaterial({
-      color: isClubroom ? 0x64665d : 0x343a38,
+      color: isClubroom ? 0x64665d : (isFacility ? 0x263638 : 0x343a38),
       roughness: 0.92
     });
     const wallH = 0.65;
@@ -138,6 +139,18 @@ export class Stage {
       mat.position.set(-7.8, 0.025, this.depth / 2 - 0.65);
       mat.receiveShadow = true;
       this.group.add(mat);
+    } else if (isFacility) {
+      // Stage 3: cold industrial fixtures outside collision cells.
+      const metal = new THREE.MeshStandardMaterial({ color: 0x52686a, roughness: 0.5, metalness: 0.55 });
+      const lightMat = new THREE.MeshStandardMaterial({ color: 0xb8eee5, emissive: 0x23413d, emissiveIntensity: 0.7, roughness: 0.45 });
+      for (const x of [-11, -3.6, 3.6, 11]) {
+        const rail = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.12, 0.14), metal);
+        rail.position.set(x, 0.55, -this.depth / 2 - 0.26);
+        this.group.add(rail);
+        const lamp = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.09, 0.08), lightMat);
+        lamp.position.set(x, 0.78, -this.depth / 2 - 0.33);
+        this.group.add(lamp);
+      }
     } else {
       // Basement back-wall pipe details, non-colliding.
       const detailMat = new THREE.MeshStandardMaterial({ color: 0x59625e, roughness: 0.55, metalness: 0.5 });

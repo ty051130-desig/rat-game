@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { CharacterAvatar } from './avatar.js?v=10.2';
-import { Stage } from './stage.js?v=10.2';
+import { CharacterAvatar } from './avatar.js?v=11.2';
+import { Stage } from './stage.js?v=11.2';
 
 export class OnlineMatchClient {
   constructor(scene, stageData, assets = {}) {
@@ -22,8 +22,10 @@ export class OnlineMatchClient {
 
     this.onStatus = () => {};
     this.onRoom = () => {};
+    this.onCountdown = () => {};
     this.onMatchStarted = () => {};
     this.onMatchEnded = () => {};
+    this.onRematchStatus = () => {};
     this.onRoomClosed = () => {};
   }
 
@@ -62,6 +64,13 @@ export class OnlineMatchClient {
       this.onStatus(`部屋 ${this.roomCode} / 参加人数 ${this.connectedPlayers}/2`);
     });
 
+    this.socket.on('countdown', (payload) => {
+      this.state = 'countdown';
+      this.ensureStage();
+      if (payload.value === 3) this.prepareForCountdown();
+      this.onCountdown(payload.value);
+    });
+
     this.socket.on('match_started', (payload) => {
       this.state = 'playing';
       this.ensureStage();
@@ -77,6 +86,10 @@ export class OnlineMatchClient {
     this.socket.on('match_ended', (payload) => {
       this.state = 'ended';
       this.onMatchEnded(payload);
+    });
+
+    this.socket.on('rematch_status', (payload) => {
+      this.onRematchStatus(payload);
     });
 
     this.socket.on('room_closed', (payload) => {
@@ -104,12 +117,37 @@ export class OnlineMatchClient {
     }
   }
 
+
+  prepareForCountdown() {
+    this.hasSnapshot = false;
+    this.latestSnapshot = null;
+    for (const visual of this.ratVisuals.values()) visual.destroy();
+    this.ratVisuals.clear();
+
+    for (const slot of ['p1', 'p2']) {
+      const avatar = this.avatars.get(slot);
+      if (!avatar || !this.stage) continue;
+      const start = this.stage.cellToWorld(this.stageData.playerStarts[slot]);
+      avatar.applyState({
+        x: start.x,
+        z: start.z,
+        yaw: slot === 'p1' ? 0 : Math.PI,
+        moving: false
+      }, true);
+    }
+  }
+
   createRoom() {
     this.socket?.emit('create_room');
   }
 
   joinRoom(code) {
     this.socket?.emit('join_room', { code });
+  }
+
+  requestRematch() {
+    if (this.state !== 'ended') return;
+    this.socket?.emit('rematch_ready');
   }
 
   leave() {

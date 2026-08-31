@@ -1,7 +1,7 @@
 @echo off
 cd /d %~dp0
 echo ================================
-echo Rat Escape v10.0 - Local Server
+echo Rat Escape v11.2 - Local Server
 echo ================================
 set PORT=8000
 where py >nul 2>nul

@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Rat Escape - v10.2</title>
-  <link rel="stylesheet" href="./style.css?v=10.2" />
+  <title>Rat Escape - v11.2</title>
+  <link rel="stylesheet" href="./style.css?v=11.2" />
   <script type="importmap">
   {
     "imports": {
@@ -21,7 +21,7 @@
     <div class="title-vignette"></div>
     <div class="menu-panel title-panel">
       <div class="eyebrow"></div>
-      <div class="version-badge">VERSION 10.2 • ONLINE BATTLE PROTOTYPE</div>
+      <div class="version-badge">VERSION 11.2 • ONLINE BATTLE PROTOTYPE</div>
       <h1>RAT ESCAPE</h1>
       <p class="title-copy"></p>
       <div class="title-actions vertical-actions">
@@ -77,6 +77,13 @@
           <span class="stage-number">STAGE 2</span>
           <span class="stage-card-title">部室</span>
           <span class="stage-card-desc">難易度：むずかしい</span>
+          <span class="stage-card-action">PLAY</span>
+        </button>
+
+        <button id="facility-stage-button" class="stage-card available facility-card">
+          <span class="stage-number">STAGE 3</span>
+          <span class="stage-card-title">研究所</span>
+          <span class="stage-card-desc">難易度：とてもむずかしい</span>
           <span class="stage-card-action">PLAY</span>
         </button>
 
@@ -145,6 +152,10 @@
 
   <div id="orientation-hint" class="touch-only">横向きにすると遊びやすいです</div>
 
+  <div id="countdown-overlay" class="hidden" aria-live="assertive">
+    <div id="countdown-text">3</div>
+  </div>
+
   <div id="message" class="hidden">
     <div id="clear-particles" aria-hidden="true">
       <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
@@ -162,6 +173,6 @@
   </div>
 
   <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
-  <script type="module" src="./js/main.js?v=10.2"></script>
+  <script type="module" src="./js/main.js?v=11.2"></script>
 </body>
 </html>

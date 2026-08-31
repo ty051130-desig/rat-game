@@ -18,10 +18,9 @@ export const clubroom = {
   targetKills: 15,
 
   character: {
-    // v9.3: full-body tennis player with embedded Idle / Run actions.
     type: 'animated',
     targetHeight: 1.78,
-    url: './assets/models/main_character.glb?v=10.2'
+    url: './assets/models/main_character.glb?v=11.2'
   },
 
 

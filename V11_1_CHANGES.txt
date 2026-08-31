@@ -1,0 +1,7 @@
+Rat Escape v11.2
+
+- Stage 3: left-side g1 pipe first spawn delayed to 12.0s so the intended left-route is reachable.
+- Online battle: 3 -> 2 -> 1 -> START! countdown before the first match.
+- Online battle: rematch keeps the same room code; both players press "もう一度遊ぶ" and the countdown starts automatically.
+- Single play Game Over message changed to "ネズミにつかまりました".
+- HTML wording/layout follows the user-provided v10.2-style text, with Stage 3 added.

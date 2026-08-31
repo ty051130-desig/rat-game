@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { PLAYER_RADIUS, PLAYER_SPEED } from './config.js?v=10.2';
+import { PLAYER_RADIUS, PLAYER_SPEED } from './config.js?v=11.2';
 
 const ANIMATED_TARGET_HEIGHT = 1.78;
 const FLOATING_FACE_TARGET_HEIGHT = 2.20;

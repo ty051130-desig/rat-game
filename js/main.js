@@ -1,18 +1,20 @@
 import * as THREE from 'three';
-import { CELL_SIZE } from './config.js?v=10.2';
-import { Game } from './game.js?v=10.2';
-import { loadGLB } from './modelLoader.js?v=10.2';
-import { basement } from './stages/basement.js?v=10.2';
-import { clubroom } from './stages/clubroom.js?v=10.2';
-import { battleArena } from './stages/battleArena.js?v=10.2';
-import { TouchControls } from './touchControls.js?v=10.2';
-import { OnlineMatchClient } from './onlineMatch.js?v=10.2';
+import { CELL_SIZE } from './config.js?v=11.2';
+import { Game } from './game.js?v=11.2';
+import { loadGLB } from './modelLoader.js?v=11.2';
+import { basement } from './stages/basement.js?v=11.2';
+import { clubroom } from './stages/clubroom.js?v=11.2';
+import { facility } from './stages/facility.js?v=11.2';
+import { battleArena } from './stages/battleArena.js?v=11.2';
+import { TouchControls } from './touchControls.js?v=11.2';
+import { OnlineMatchClient } from './onlineMatch.js?v=11.2';
 
-console.log('=== RAT ESCAPE VERSION 10.2 ===');
+console.log('=== RAT ESCAPE VERSION 11.2 ===');
 
 const SOLO_STAGES = new Map([
   [basement.id, basement],
-  [clubroom.id, clubroom]
+  [clubroom.id, clubroom],
+  [facility.id, facility]
 ]);
 
 const root = document.querySelector('#game-root');
@@ -82,6 +84,9 @@ const roomCodeEl = document.querySelector('#room-code-display');
 const roomPlayersEl = document.querySelector('#room-players-display');
 const serverUrlInput = document.querySelector('#server-url-input');
 const joinCodeInput = document.querySelector('#join-code-input');
+const countdownOverlay = document.querySelector('#countdown-overlay');
+const countdownText = document.querySelector('#countdown-text');
+const restartButton = document.querySelector('#restart-button');
 
 const assetPromises = new Map();
 const clock = new THREE.Clock();
@@ -241,15 +246,29 @@ async function connectOnline() {
     roomCodeEl.textContent = code || '----';
     roomPlayersEl.textContent = `${players ?? 0} / 2`;
   };
+  onlineMatch.onCountdown = (value) => {
+    hideAllMenuScreens();
+    gameUIs.forEach((el) => el.classList.remove('hidden'));
+    showHudForOnline();
+    resetResult();
+    mode = 'online-countdown';
+    countdownText.textContent = String(value);
+    countdownOverlay.classList.remove('hidden');
+    history.replaceState(null, '', '#online');
+  };
   onlineMatch.onMatchStarted = () => {
     hideAllMenuScreens();
     gameUIs.forEach((el) => el.classList.remove('hidden'));
     showHudForOnline();
+    countdownOverlay.classList.add('hidden');
+    restartButton.textContent = 'もう一度';
     mode = 'playing-online';
     history.replaceState(null, '', '#online');
   };
   onlineMatch.onMatchEnded = (payload) => {
     mode = 'online-ended';
+    countdownOverlay.classList.add('hidden');
+    restartButton.textContent = 'もう一度遊ぶ';
     const p1 = payload.scores.p1;
     const p2 = payload.scores.p2;
     const h1 = payload.hits?.p1 ?? 0;
@@ -268,6 +287,18 @@ async function connectOnline() {
       document.querySelector('#message-sub').textContent = `${loserName} がネズミに3回ぶつかりました  •  BLUE ${p1} - RED ${p2}`;
     } else {
       document.querySelector('#message-sub').textContent = `TIME UP  •  BLUE ${p1} - RED ${p2}  •  HIT ${h1}/3 - ${h2}/3`;
+    }
+  };
+  onlineMatch.onRematchStatus = (payload) => {
+    if (mode !== 'online-ended' && mode !== 'online-rematch-wait') return;
+    const mySlot = onlineMatch.localSlot;
+    const otherSlot = mySlot === 'p1' ? 'p2' : 'p1';
+    const myReady = Boolean(payload.ready?.[mySlot]);
+    const otherReady = Boolean(payload.ready?.[otherSlot]);
+    if (myReady && !otherReady) {
+      mode = 'online-rematch-wait';
+      countdownText.textContent = '相手を待っています…';
+      countdownOverlay.classList.remove('hidden');
     }
   };
   onlineMatch.onRoomClosed = (payload) => {
@@ -342,6 +373,14 @@ function applyStageAtmosphere(stageData) {
     keyLight.color.setHex(0xffefd0);
     sideLight.color.setHex(0xb7c7b0);
     renderer.toneMappingExposure = 1.02;
+  } else if (stageData.theme === 'facility') {
+    scene.background = new THREE.Color(0x10181a);
+    scene.fog = new THREE.Fog(0x10181a, 38, 66);
+    hemi.color.setHex(0xaec9c7);
+    hemi.groundColor.setHex(0x1c2a2a);
+    keyLight.color.setHex(0xd9f2e8);
+    sideLight.color.setHex(0x86b8b0);
+    renderer.toneMappingExposure = 0.96;
   } else if (stageData.theme === 'battle') {
     scene.background = new THREE.Color(0x1b1d22);
     scene.fog = new THREE.Fog(0x1b1d22, 34, 58);
@@ -375,12 +414,23 @@ document.querySelector('#stage-back-button').addEventListener('click', showTitle
 document.querySelector('#online-back-button').addEventListener('click', () => reloadTo('title'));
 document.querySelector('#basement-stage-button').addEventListener('click', () => startSoloStage(basement));
 document.querySelector('#clubroom-stage-button').addEventListener('click', () => startSoloStage(clubroom));
+document.querySelector('#facility-stage-button').addEventListener('click', () => startSoloStage(facility));
 document.querySelector('#online-connect-button').addEventListener('click', connectOnline);
 document.querySelector('#online-create-button').addEventListener('click', () => onlineMatch?.createRoom());
 document.querySelector('#online-join-button').addEventListener('click', () => onlineMatch?.joinRoom(joinCodeInput.value.trim().toUpperCase()));
-document.querySelector('#restart-button').addEventListener('click', () => {
-  if (currentStageData?.id === battleArena.id) reloadTo('online');
-  else reloadTo(currentStageData?.id ?? 'title');
+restartButton.addEventListener('click', () => {
+  if (currentStageData?.id === battleArena.id && onlineMatch) {
+    if (mode === 'online-ended') {
+      messageEl.classList.add('hidden');
+      mode = 'online-rematch-wait';
+      countdownText.textContent = '相手を待っています…';
+      countdownOverlay.classList.remove('hidden');
+      onlineMatch.requestRematch();
+      return;
+    }
+    return;
+  }
+  reloadTo(currentStageData?.id ?? 'title');
 });
 document.querySelector('#stage-select-button').addEventListener('click', () => reloadTo('stages'));
 document.querySelector('#title-button').addEventListener('click', () => reloadTo('title'));
@@ -414,7 +464,8 @@ function animate() {
       scoreSecondaryEl.textContent = `RED ${snap.players.p2.score}  •  HIT ${snap.players.p2.hits ?? 0}/3`;
       timerEl.textContent = `TIME ${Math.ceil(snap.timeLeft)}`;
     }
-  } else if (onlineMatch && (mode === 'online-loading' || mode === 'online-setup')) {
+  } else if (onlineMatch && (mode === 'online-loading' || mode === 'online-setup' || mode === 'online-countdown' || mode === 'online-rematch-wait' || mode === 'online-ended')) {
+    onlineMatch.setInput(0, 0);
     onlineMatch.update(dt);
   } else {
     touchControls.reset();

@@ -1,0 +1,7 @@
+Rat Escape v11.2
+
+- Rebuilt Stage 3 so rats can actually be captured from behind.
+- Added multiple circulation loops instead of mostly one-cell dead-end corridors.
+- Preserved the rule that no 2x2 group of open cells exists.
+- Reduced Stage 3 pipes from 6 to 5 and staggered activation so the opening is learnable before full pressure begins.
+- Preserved v11.1 online countdown and same-room rematch behavior.
